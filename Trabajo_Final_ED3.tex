@@ -1,0 +1,268 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\usepackage[hidelinks]{hyperref}
+
+\begin{document}
+\begin{titlepage}
+\begin{center}
+
+\includegraphics[width=0.4\textwidth]{Imagenes/head_fig.jpg}
+
+\Large\textbf{UNIVERSIDAD NACIONAL DE CÓRDOBA} \\[0.15cm]
+\large FACULTAD DE CIENCIAS EXACTAS, FÍSICAS Y NATURALES \\[0.15cm]
+\large CÁTEDRA DE ELECTRÓNICA DIGITAL III \\[1cm]
+
+\Large\textbf{TRABAJO PRÁCTICO INTEGRADOR} \\[0.5cm]
+
+\Large\textbf{``AUTO A CONTROL REMOTO''} \\[1cm]
+
+\large Grupo Nº 1 \\[0.5cm]
+
+\large Alumnos: \\[0.2cm]
+\large Arteaga Barrera, Cristian Eduardo \\[0.1cm]
+\large Baccino, Luca \\[0.1cm]
+\large Baccino, Octavio \\[1cm]
+
+\large Profesor: \\[0.2cm]
+\large Migliore, Emiliano \\[1.0cm]
+
+\large Comisión Nº 3: \\[1cm]
+
+\large 22/10/2025
+
+\end{center}
+\end{titlepage}
+\tableofcontents
+\newpage
+\section{PROYECTO}
+
+En el presente proyecto final de la asignatura “Electrónica Digital 3” se describe la
+implementación de un “robot móvil de pequeñas dimensiones controlado por bluetooth”.
+
+La implementación del proyecto está estructurada de la siguiente forma:
+
+El usuario podrá controlar el movimiento del robot mediante comunicación UART utilizando
+el SSE2 (Dispositivo Móvil). Se podrá visualizar información relevante del estado del robot
+con SSE1.1 (Señalización Óptica) y también contará con una alarma \underline{SSE1.2} (Señalización
+Acústica).
+
+El robot contará con un sensor ultrasónico (SSE 3.4) configurable mediante el SSE1.3
+(Control de Distancia) para evitar obstáculos.
+
+\subsection*{Terminología}
+
+\begin{itemize}
+    \item SEP: Sistema Electrónico Programable
+    \item SSE: Subsistema Electrónico
+    \item SSEP: Subsistema Electrónico Programable
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Imagenes/sep_diagrama.jpeg}
+    \caption{Diagrama general del Sistema Electrónico Programable (SEP) y sus subsistemas.}
+    \label{fig:sep}
+\end{figure}
+
+\newpage
+\section{DESCRIPCIÓN DEL SEP}
+
+El sistema propuesto consiste en el control de un robot mediante bluetooth. El robot es
+capaz de realizar tareas básicas como desplazarse en todas las direcciones, informar su
+estado mediante una pantalla LCD 16x2, emitir sonido y detenerse ante obstáculos
+utilizando un sensor ultrasónico. Además, el robot cuenta con un potenciómetro para
+calibrar la distancia de detención.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Imagenes/robot1.png}
+    \hfill
+    \includegraphics[width=0.5\textwidth]{Imagenes/robot2.png}
+    \caption{Vista del robot implementado: arriba se observa la electrónica montada en la protoboard; abajo se muestra la parte frontal.}
+    \label{fig:robot}
+\end{figure}
+
+\section{DESARROLLO DEL HARDWARE}
+
+\subsection{Circuito del SSEP Microcontrolador}
+
+Solamente se tuvo que alimentar la placa con 3,3VDC ya que se utilizaron tanto el oscilador interno de la placa como su botón de reset integrado. Se utilizó una batería de 9VDC junto con un módulo de alimentación MB102.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Imagenes/fig_ssep_microcontrolador.jpeg}
+    \caption{Vista del circuito correspondiente al SSEP microcontrolador.}
+    \label{fig:micro}
+\end{figure}
+
+% -------------------------------------------------------------
+\newpage
+\subsection{Circuito del SSE de Señalización Óptica}
+
+Además de la pantalla LCD 16x2, se agregaron 4 LEDs para observar el estado de los motores y uno conectado al potenciómetro para ver el estado de la entrada del ADC.   
+La pantalla LCD se conecta como en la figura de abajo (los pines de la imagen no son los mismos utilizados en la conexión real) y para su manejo se crearon funciones en base a otras librerías existentes como ``LiquidCrystal'' de Arduino.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Imagenes/fig_sse_senal_optica_esquema.png}
+    \caption{Diagrama de conexión del módulo LCD 16x2.}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Imagenes/fig_sse_senal_optica_robot.png}
+    \caption{Vista del robot con el circuito correspondiente al SSE de señalización óptica.}
+\end{figure}
+
+% -------------------------------------------------------------
+
+\subsection{Circuito del SSE de Señalización Acústica}
+
+Buzzer piezoeléctrico pasivo conectado al DAC del microcontrolador desde el que se generó una señal sinusoidal con frecuencia variable. Para que el buzzer se escuchara más fuerte y no cargara tanto al microcontrolador, se conectó el DAC a la base de un transistor BJT y el buzzer en el colector (corriente limitada por el propio buzzer). De esta forma el transistor trabaja en corte/saturación en base a la frecuencia de la onda sinusoidal del DAC.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Imagenes/fig_sse_senal_acustica_robot.png}
+    \caption{Circuito del buzzer pasivo conectado mediante transistor.}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{Imagenes/fig_sse_senal_acustica_esquema.png}
+    \caption{Esquema eléctrico simplificado del circuito de señalización acústica.}
+\end{figure}
+
+
+% -------------------------------------------------------------
+
+\subsection{Circuito del SSE de Entrada de Datos}
+
+Se conectó un potenciómetro al canal 0 del ADC y en base a los valores obtenidos por el mismo se estableció el umbral de detección del sensor ultrasónico.  
+El ADC se configuró para tomar muestras cada 1s utilizando el disparo por flanco descendente del MAT0.1.
+
+\[
+I_{LPC}=\frac{3.3\text{V} - 0.7\text{V}}{1\text{k}\Omega} = 2.6\text{mA}
+\]
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Imagenes/fig_sse_entrada_datos.png}
+    \caption{Ubicación del potenciómetro correspondiente al SSE de entrada de datos.}
+\end{figure}
+
+% -------------------------------------------------------------
+\newpage
+\subsection{Circuito del SSE Sensor de Distancia}
+
+Se utilizó el sensor ultrasónico HC-SR04. Su funcionamiento se observa en la imagen de abajo: se envía un pulso de $10\mu s$ por el pin Trigger y a partir del mismo se envía una onda de sonido de 40kHz.  
+Luego de enviar la onda, el pin Echo se pone en ``1'' hasta que recibe la onda rebotada. Utilizando el CAP1.1 se midió el tiempo que Echo estuvo en ``1'' y a partir del mismo se calculó la distancia a la que rebotó la onda.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Imagenes/fig_sse_sensor_distancia_robot.png}
+    \caption{Vista del sensor ultrasónico montado en el robot.}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\textwidth]{Imagenes/fig_sse_sensor_distancia_esquema.png}
+    \caption{Diagrama de funcionamiento del sensor HC-SR04.}
+\end{figure}
+
+% -------------------------------------------------------------
+\subsection{Circuito del SSE de Comunicación}
+
+La comunicación se realizó por el protocolo UART entre el microcontrolador y un módulo bluetooth BLE (Bluetooth Low Energy) ZS-040. El módulo bluetooth se conecta a un teléfono y a través del mismo se envían letras con codificación UTF-8 que luego son procesadas por el microcontrolador para realizar acciones.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Imagenes/fig_sse_comunicacion.png}
+    \caption{Módulo Bluetooth ZS-040 conectado al microcontrolador.}
+\end{figure}
+
+% -------------------------------------------------------------
+\newpage
+\subsection{Circuito del SSE de Motores de CC}
+
+Se utilizó el driver de motor L9110S para controlar los motores que consumen más corriente de la que la LPC1769 puede entregar.  
+Las entradas del driver se conectaron a pines GPIO de la placa, los cuales son controlados según los caracteres recibidos por UART.  
+Cuando hay un obstáculo frente al robot los motores se detienen.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{Imagenes/fig_sse_motores.png}
+    \caption{Driver L9110S y conexiones hacia los motores del robot.}
+\end{figure}
+
+\section{DESARROLLO DEL FIRMWARE}
+\subsection{Diagrama de bloques del sistema}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\linewidth]{Imagenes/diagrama_bloques.jpeg}
+    \caption{Diagrama en bloques del sistema}
+    \label{fig:bloques}
+\end{figure}
+
+\subsection{Breve explicación del funcionamiento del firmware}
+Se realizaron funciones para el manejo de la pantalla LCD, manejo de motores de CC y control del Buzzer. Estas funciones son comandadas principalmente por la UART ISR, que interpreta los datos recibidos y ejecuta comandos en base a ellos.
+
+El ADC interrumpe cada un segundo en base al flanco descendente del MAT0.1, activa el sensor Ultrasónico y almacena el valor convertido para luego usarlo en TIMER1 ISR. Luego de activar el Trigger del Sensor, el CAP1.1 recibe los flancos del Echo y en base al mismo se realiza el cálculo de la distancia en centímetros. Por último, la distancia es mapeada en un valor uint16$\_$t y comparada con el valor obtenido en el ADC; en caso de que la distancia sea menor que el umbral establecido por el ADC, se envía un comando de Stop a los motores.
+TIMER2 ISR y TIMER3 ISR se encargan de controlar la frecuencia de la señal enviada al DAC. Se utiliza una onda senoidal almacenada en memoria y se reproduce a distintas frecuencias para cambiar el tono del Buzzer.
+
+\section{PRUEBAS DEL SISTEMA}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\linewidth]{Imagenes/pruebas.jpeg}
+    \caption{Listado de pruebas realizadas}
+    \label{fig:pruebas}
+\end{figure}
+
+\newpage
+\section{CONCLUSIONES}
+Se logró realizar el Sistema Electrónico propuesto. Se tuvieron problemas con la alimentación para algunos casos específicos de funcionamiento, por lo que sería recomendable cambiar la fuente de alimentación o usar motores con menor consumo para proyectos futuros.
+
+Se recomienda no mandar el comando de retroceder inmediatamente luego del de avanzar ya que se produce un pico de consumo que resetea la fuente de alimentación.
+
+\section{Bibliografía y Referencias}
+
+\begin{itemize}
+    \item Notas de clases de la materia Electrónica Digital 3 (FCEFyN, Universidad Nacional de Córdoba).
+    \item Manual de usuario de LPC176x/5x (UM10360 Rev. 4.1 - 2016).
+    \item Repositorio de melodías para buzzer:  
+    
+    \texttt{https://github.com/robsoncouto/arduino-songs/tree/master/takeonme}
+\end{itemize}
+
+\section{Anexo}
+
+\subsection{Hojas de Datos / Guías de Usuario}
+
+\begin{itemize}
+    \item Driver de motor L9110S — User guide:  
+    
+    \texttt{https://www.laskakit.cz/user/related\_files/l9110\_2\_channel\_motor\_driver.pdf}
+
+    \item Sensor ultrasónico HC-SR04 — Datasheet:  
+    
+    \texttt{https://www.handsontec.com/dataspecs/HC-SR04-Ultrasonic.pdf}
+
+    \item Pantalla LCD16x2 — Datasheet: 
+    
+    \texttt{https://www.vishay.com/docs/37484/lcd016n002bcfhet.pdf}
+\end{itemize}
+
+\subsection{Código del LPC1769}
+
+\noindent
+El código completo utilizado para el desarrollo del proyecto “Auto a Control Remoto” se encuentra disponible en el siguiente repositorio:
+
+\begin{center}
+\textbf{\href{https://github.com/EsqueletinhoX/Trabajo_Final_Digital_3/tree/main}{EsqueletinhoX/Trabajo\_Final\_Digital\_3}}
+\end{center}
+
+Incluye todos los archivos fuente, librerías utilizadas y cualquier material adicional requerido para la implementación del SEP desarrollado.
+
+
+\end{document}
